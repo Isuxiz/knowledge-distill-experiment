@@ -1,8 +1,10 @@
 import torch
 import numpy as np
 
-
 # split是控制是否拆分，因为有soft和hard的两个softmax结果，位置0是soft，1是hard
+from utils.get_available_device import get_available_device
+
+
 def loss_batch(model, hard_loss_func, xb, yb, T, teacher_model=None, soft_loss_func=None, opt=None,
                alpha=0.9, beta=0.1, T_square_make_up=False):
     output = model(xb)
@@ -25,12 +27,14 @@ def loss_batch(model, hard_loss_func, xb, yb, T, teacher_model=None, soft_loss_f
 
 def fit(epochs, model, hard_loss_func, opt, train_dl, valid_dl, T, teacher_model=None, soft_loss_func=None, alpha=0.9,
         beta=0.1, T_square_make_up=False):
+    device = get_available_device()
     for epoch in range(epochs):
         model.train()
         count = 0
         for xb, yb in train_dl:
             count += 1
-            loss_batch(model=model, hard_loss_func=hard_loss_func, xb=xb, yb=yb, opt=opt, T=T,
+            loss_batch(model=model.to(device), hard_loss_func=hard_loss_func, xb=xb.to(device), yb=yb.to(device),
+                       opt=opt, T=T,
                        teacher_model=teacher_model,
                        soft_loss_func=soft_loss_func, alpha=alpha, beta=beta, T_square_make_up=T_square_make_up)
             if not count % 100:
@@ -39,7 +43,8 @@ def fit(epochs, model, hard_loss_func, opt, train_dl, valid_dl, T, teacher_model
         model.eval()
         with torch.no_grad():
             losses, nums = zip(
-                *[loss_batch(model, hard_loss_func, xb, yb, teacher_model=teacher_model, soft_loss_func=soft_loss_func,
+                *[loss_batch(model.to(device), hard_loss_func, xb.to(device), yb.to(device),
+                             teacher_model=teacher_model, soft_loss_func=soft_loss_func,
                              T=T)
                   for xb, yb in valid_dl]
             )
