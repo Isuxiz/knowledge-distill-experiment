@@ -74,7 +74,7 @@ def distill(T, alpha, beta, T_square_make_up):
 
 
 for T in [2, 4, 6, 10]:
-    for alpha in [0.1, 0.3, 0.5]:
-        beta = 1 - alpha
+    for alpha in [0.1, 0.3, 0.5, 0.7, 0.9]:
+        beta = round(1 - alpha, 1)
         for makeUp in [True, False]:
             distill(T, alpha, beta, makeUp)

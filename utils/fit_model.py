@@ -11,10 +11,10 @@ def loss_batch(model, hard_loss_func, xb, yb, T, teacher_model=None, soft_loss_f
     hard_y_hat = output[1]
     hard_loss = hard_loss_func(hard_y_hat, yb)
 
-    soft_loss = soft_loss_func(output[0].log(),
-                               teacher_model(xb)) if teacher_model and soft_loss_func else None
+    soft_loss = soft_loss_func(teacher_model(xb).log(),
+                               output[0], reduction='sum') if teacher_model and soft_loss_func else None
 
-    loss = alpha * soft_loss * (1 if not T_square_make_up else T * T) + beta * hard_loss
+    loss = alpha * (1 if not T_square_make_up else T * T) * soft_loss + beta * hard_loss
 
     # opt非None即在训练集上
     if opt is not None:
