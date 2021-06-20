@@ -26,6 +26,8 @@ dataset_val = get_MNIST_dataset()
 train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=bs, shuffle=True)
 valid_loader = torch.utils.data.DataLoader(dataset_val, batch_size=bs * 2, shuffle=True)
 
+torch.save(get_simple_2_layers_linear(T=1).state_dict(), './model/uniform_initial_weight')
+
 # 原始网络结构
 # 存在就取现成的
 path = './model/original_small'
@@ -34,6 +36,8 @@ if os.path.exists(path):
 # 否则训练一个
 else:
     original_net_S = get_simple_2_layers_linear(T=1)
+    # 保证所有小模型的初始权重一致
+    original_net_S.load_state_dict(torch.load('./model/uniform_initial_weight'))
     # 单独训练这个简单的2层线性relu网络
     fit_model(epochs=10, model=original_net_S, hard_loss_func=cross_entropy_loss,
               opt=optim.Adam(original_net_S.parameters()),
@@ -64,6 +68,8 @@ def distill(T, alpha, beta, T_square_make_up):
     else:
         print('未训练过，开始训练……')
         model = get_simple_2_layers_linear(T=T)
+        # 保证所有小模型的初始权重一致
+        model.load_state_dict(torch.load('./model/uniform_initial_weight'))
         # 单独训练这个简单的2层线性relu网络
         fit_model(epochs=10, model=model, hard_loss_func=cross_entropy_loss, opt=optim.Adam(model.parameters()),
                   train_dl=train_loader,
