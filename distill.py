@@ -26,13 +26,18 @@ dataset_val = get_MNIST_dataset()
 train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=bs, shuffle=True)
 valid_loader = torch.utils.data.DataLoader(dataset_val, batch_size=bs * 2, shuffle=True)
 
-torch.save(get_simple_2_layers_linear(T=1).state_dict(), './model/uniform_initial_weight')
+# 所有小网络共享同一份初始权值
+if not os.path.exists('./model/uniform_initial_weight'):
+    torch.save(get_simple_2_layers_linear(T=1).state_dict(), './model/uniform_initial_weight')
 
 # 原始网络结构
 # 存在就取现成的
 path = './model/original_small'
 if os.path.exists(path):
-    original_net_S = torch.load(path)
+    if torch.cuda.is_available():
+        original_net_S = torch.load(path)
+    else:
+        original_net_S = torch.load(path, map_location=torch.device('cpu'))
 # 否则训练一个
 else:
     original_net_S = get_simple_2_layers_linear(T=1)
@@ -75,6 +80,8 @@ def distill(T, alpha, beta, T_square_make_up):
                   train_dl=train_loader,
                   valid_dl=valid_loader, T=T, teacher_model=net_T, soft_loss_func=cross_entropy_loss)
 
+        if not os.path.exists(f'./model/distilled_models/'):
+            os.mkdir(f'./model/distilled_models/')
         torch.save(model, savePath)
     print(f'{config}时蒸馏分类准确率为：',
           get_accuracy(model))
@@ -82,7 +89,7 @@ def distill(T, alpha, beta, T_square_make_up):
 
 
 count = 0
-for T in [2, 4, 6, 10]:
+for T in [2, 4, 6, 10, 20]:
     for alpha in [0.1, 0.3, 0.5, 0.7, 0.9]:
         beta = round(1 - alpha, 1)
         for makeUp in [True, False]:

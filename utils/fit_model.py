@@ -12,7 +12,7 @@ def loss_batch(model, hard_loss_func, x_batch, y_batch, T, optimizer=None,
     soft_y_hat, hard_y_hat = output[0], output[1]
 
     hard_loss = hard_loss_func(y_batch, hard_y_hat)
-    soft_loss = soft_loss_func(teacher_model(x_batch).argmax(-1),
+    soft_loss = soft_loss_func(teacher_model(x_batch),
                                soft_y_hat) if teacher_model and soft_loss_func else None
 
     loss = alpha * (
