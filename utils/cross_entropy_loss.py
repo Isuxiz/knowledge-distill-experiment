@@ -15,7 +15,7 @@ def cross_entropy_loss(P, Q):
     elif dim == 2:
         return ((Q.log() * P).sum(-1) * -1).sum()
     else:
-        assert False, 'P must be a 1-dimensional label tensor\
+        assert True, 'P must be a 1-dimensional label tensor\
  (the dimension represents batch size) \
  or 2-dimensional distribution tensor \
  (dimensions represent batch size and various probability distributions respectively).'

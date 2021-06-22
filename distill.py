@@ -18,7 +18,7 @@ bs = 64
 net_T = get_pretrained_LeNet_MNIST_classifier()
 net_T.fc.sig7 = SoftmaxWithTemperature(T=1)
 print('教师网络参数情况为：', get_parameter_number(net_T))
-print('教师网络分类准确率为：', get_accuracy(net_T, False))
+print('教师网络分类准确率为：', get_accuracy(net_T, is_student_model=False))
 
 # 获取DataLoader
 dataset_train = get_MNIST_dataset(is_train=True)
@@ -68,14 +68,17 @@ def distill(T, alpha, beta, T_square_make_up):
     # 存在就取训练好的
     if os.path.exists(savePath):
         print('已训练过')
-        model = torch.load(savePath)
+        if torch.cuda.is_available():
+            model = torch.load(savePath)
+        else:
+            model = torch.load(savePath, map_location=torch.device('cpu'))
     # 否则训练一个
     else:
         print('未训练过，开始训练……')
         model = get_simple_2_layers_linear(T=T)
         # 保证所有小模型的初始权重一致
         model.load_state_dict(torch.load('./model/uniform_initial_weight'))
-        # 单独训练这个简单的2层线性relu网络
+        # 指导训练这个简单的2层线性relu网络
         fit_model(epochs=10, model=model, hard_loss_func=cross_entropy_loss, opt=optim.Adam(model.parameters()),
                   train_dl=train_loader,
                   valid_dl=valid_loader, T=T, teacher_model=net_T, soft_loss_func=cross_entropy_loss)
