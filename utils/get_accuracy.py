@@ -14,6 +14,8 @@ class AccFormatter:
 
         assert (self.tp_total + (self.fp_total + self.fn_total / 2)) != 10000, 'Label number wrong.'
 
+        self.total_acc = self.tp_total / 10000
+
     def __str__(self):
         string = '\n\t'
         tp = '\nTP\t'
@@ -24,7 +26,7 @@ class AccFormatter:
             tp += "{0:<4}\t".format(v['tp'])
             fp += "{0:<4}\t".format(v['fp'])
             fn += "{0:<4}\t".format(v['fn'])
-        return string + tp + fp + fn + f'\nTotal acc: {round(self.tp_total / 10000 * 100, 2)}%\n'
+        return string + tp + fp + fn + f'\nTotal acc: {round(self.total_acc * 100, 2)}%\n'
 
 
 def get_accuracy(model, is_student_model=True):
